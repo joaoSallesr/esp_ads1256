@@ -1,0 +1,7 @@
+version: "1.0.0"
+description: "ESP-IDF component for ADS1256 ADC"
+maintainers:
+  - "João Salles"
+
+documentation: "https://github.com/joaoSallesr/esp_ads1256"
+repository: "https://github.com/joaoSallesr/esp_ads1256"

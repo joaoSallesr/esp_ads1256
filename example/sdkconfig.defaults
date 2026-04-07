@@ -1,0 +1,10 @@
+# SDK Config defaults for ADS1256 Example
+
+# SPI configuration (adjust based on your hardware)
+CONFIG_SPI_MASTER_ISR_IN_IRAM=y
+
+# Logging level
+CONFIG_LOG_DEFAULT_LEVEL=3
+
+# Optional: Enable SDIO hostif driver if needed
+# CONFIG_SDIO_HOSTIF_ENABLED=y
