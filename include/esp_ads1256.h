@@ -2,6 +2,8 @@
 #define ESP_ADS1256_H
 
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include <esp_log.h>
 #include <esp_system.h>
@@ -92,13 +94,13 @@ typedef enum
 } ads1256_drate_t;
 
 // ─── Configuration struct ─────────────────────────────────────────────────────
-typedef struct
+
+/**
+ * @brief ADS1256 configuration structure.
+ */
+typedef struct ads1256_config_s
 {
-    spi_host_device_t spi_host; // e.g. SPI2_HOST
-    spi_common_dma_t spi_dma;
-    gpio_num_t miso;
-    gpio_num_t mosi;
-    gpio_num_t sclk;
+    spi_host_device_t spi_host;
     gpio_num_t cs;
     gpio_num_t drdy;  // Data Ready (active low)
     gpio_num_t reset; // Hardware reset (active low), or GPIO_NUM_NC to skip
@@ -106,11 +108,44 @@ typedef struct
     ads1256_drate_t drate;
     int16_t drdy_timeout_ms;
     int16_t ads_transfer_size;
+    bool bufen;
 } ads1256_config_t;
 
-// ─── Device handle ────────────────────────────────────────────────────────────
-typedef struct ads1256_dev_t *ads1256_handle_t;
+/**
+ * @brief ADS1256 context structure.
+ */
+struct ads1256_context_t
+{
+    ads1256_config_t dev_config;
+    spi_device_handle_t spi_handle;
+};
 
-esp_err_t ads1256_init(const ads1256_config_t *cfg, ads1256_handle_t *out_handle);
+/**
+ * @brief ADS1256 context structure definition.
+ */
+typedef struct ads1256_context_t ads1256_context_t;
+
+/**
+ * @brief ADS1256 handle structure definition.
+ */
+typedef struct ads1256_context_t *ads1256_handle_t;
+
+/**
+ * @brief ADS1256 handle structure definition.
+ */
+esp_err_t ads1256_init(const ads1256_config_t *ads1256_config, ads1256_handle_t *ads1256_handle);
+
+// FAZER ----------------------------------------------------------------------------------
+esp_err_t ads1256_send_cmd(ads1256_handle_t handle, uint8_t cmd);
+
+esp_err_t ads1256_write_reg(ads1256_handle_t handle, uint8_t reg, uint8_t val);
+
+esp_err_t ads1256_wait_drdy(ads1256_handle_t handle);
+
+esp_err_t ads1256_set_gain(ads1256_handle_t handle);
+
+esp_err_t ads1256_set_drate(ads1256_handle_t handle);
+
+esp_err_t ads1256_set_channel(ads1256_handle_t handle, uint8_t pos, uint8_t neg);
 
 #endif // ESP_ADS1256_H
