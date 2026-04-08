@@ -1,6 +1,7 @@
 #ifndef ESP_ADS1256_H
 #define ESP_ADS1256_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,6 +11,7 @@
 #include <esp_log.h>
 #include <esp_system.h>
 #include <esp_timer.h>
+#include <rom/ets_sys.h>
 
 #include <driver/gpio.h>
 #include <driver/spi_master.h>
@@ -120,7 +122,6 @@ typedef struct ads1256_config_s {
     ads1256_gain_t    gain;     /*!< ADS1256 Gain Options */
     ads1256_drate_t   drate;    /*!< ADS1256 Data Rate Options */
     int32_t           drdy_timeout_ms;
-    int32_t           ads_transfer_size;
     bool              bufen;
 } ads1256_config_t;
 
@@ -155,32 +156,24 @@ typedef struct ads1256_context_t *ads1256_handle_t;
  */
 esp_err_t ads1256_init(const ads1256_config_t *config, ads1256_handle_t *handle);
 
-/**
- * @brief Block communication until DRDY goes low
- * @param[in] handle ADS1256 device handle.
- * @return esp_err_t ESP_OK on success.
- */
-esp_err_t ads1256_wait_drdy(ads1256_handle_t handle);
-// FAZER -------------------------------------------------------
-
-/**
- * @brief Remove ADS1256 device from SPI and free resources
- *
- * @param[in] handle ADS1256 device handle.
- * @return esp_err_t ESP_OK on success.
- */
 esp_err_t ads1256_delete(ads1256_handle_t handle);
 
-esp_err_t ads1256_read_single(ads1256_handle_t handle, int32_t *out_raw);
+esp_err_t ads1256_wait_drdy(ads1256_handle_t handle);
+
+esp_err_t ads1256_start_conversion(ads1256_handle_t handle);
+
+esp_err_t ads1256_read_result(ads1256_handle_t handle, int32_t *out_raw);
 
 esp_err_t ads1256_send_cmd(ads1256_handle_t handle, uint8_t cmd);
 
+esp_err_t ads1256_read_reg(ads1256_handle_t handle, uint8_t reg, uint8_t *out_val);
+
 esp_err_t ads1256_write_reg(ads1256_handle_t handle, uint8_t reg, uint8_t val);
+
+esp_err_t ads1256_set_channel(ads1256_handle_t handle, uint8_t pos, uint8_t neg);
 
 esp_err_t ads1256_set_gain(ads1256_handle_t handle);
 
 esp_err_t ads1256_set_drate(ads1256_handle_t handle);
-
-esp_err_t ads1256_set_channel(ads1256_handle_t handle, uint8_t pos, uint8_t neg);
 
 #endif // ESP_ADS1256_H

@@ -120,6 +120,67 @@ esp_err_t ads1256_set_drate(ads1256_handle_t handle) {
     return ads1256_write_reg(handle, ADS1256_REG_DRATE, handle->dev_config.drate);
 }
 
+esp_err_t ads1256_start_conversion(ads1256_handle_t handle) {
+    esp_err_t ret;
+
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY), TAG,
+                        "Failed to acquire bus for conversion");
+
+    uint8_t cmd = ADS1256_CMD_SYNC;
+    cs_low(handle);
+    ret = spi_write_bytes(handle, &cmd, 1);
+    cs_high(handle);
+    if (ret != ESP_OK)
+        goto done;
+
+    ets_delay_us(4); // t11: 24 × tCLKIN @ 7.68MHz
+
+    cmd = ADS1256_CMD_WAKEUP;
+    cs_low(handle);
+    ret = spi_write_bytes(handle, &cmd, 1);
+    cs_high(handle);
+
+done:
+    spi_device_release_bus(handle->spi_handle);
+    return ret;
+}
+
+esp_err_t ads1256_read_result(ads1256_handle_t handle, int32_t *out_raw) {
+    ESP_ARG_CHECK(handle);
+    ESP_ARG_CHECK(out_raw);
+
+    esp_err_t ret;
+    uint8_t   rx[3] = {0};
+
+    ESP_RETURN_ON_ERROR(ads1256_wait_drdy(handle), TAG, "DRDY timeout");
+
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY), TAG,
+                        "Failed to acquire bus for read");
+
+    uint8_t cmd = ADS1256_CMD_RDATA;
+    cs_low(handle);
+    ret = spi_write_bytes(handle, &cmd, 1);
+    if (ret != ESP_OK)
+        goto done;
+
+    ets_delay_us(T6_US); // t6: 50 × tCLKIN @ 7.68MHz
+
+    ret = spi_read_bytes(handle, rx, 3);
+
+done:
+    cs_high(handle);
+    spi_device_release_bus(handle->spi_handle);
+    if (ret != ESP_OK)
+        return ret;
+
+    int32_t raw = ((int32_t)rx[0] << 16) | ((int32_t)rx[1] << 8) | rx[2];
+    if (raw & 0x800000)
+        raw |= 0xFF000000;
+    *out_raw = raw;
+
+    return ESP_OK;
+}
+
 esp_err_t ads1256_init(const ads1256_config_t *ads1256_config, ads1256_handle_t *ads1256_handle) {
     ESP_ARG_CHECK(ads1256_config);
     esp_err_t ret = ESP_FAIL;
@@ -173,7 +234,7 @@ esp_err_t ads1256_init(const ads1256_config_t *ads1256_config, ads1256_handle_t 
                       "Failed to set STATUS register");
 
     /* set channels after software reset */
-    ESP_GOTO_ON_ERROR(ads1256_set_channel(out_handle, ADS1256_MUX_AIN0, ADS1256_MUX_AINCOM), err_handle, TAG,
+    ESP_GOTO_ON_ERROR(ads1256_set_channel(out_handle, ADS1256_MUX_AIN0, ADS1256_MUX_AIN1), err_handle, TAG,
                       "Failed to set default channel");
 
     // VERIFICAR STATUS e CHANNELS --------------------------------------------------------
@@ -199,4 +260,13 @@ err_handle:
         spi_bus_remove_device(out_handle->spi_handle);
     free(out_handle);
     return ret;
+}
+
+esp_err_t ads1256_delete(ads1256_handle_t handle) {
+    if (!handle)
+        return ESP_ERR_INVALID_ARG;
+    if (handle->spi_handle)
+        spi_bus_remove_device(handle->spi_handle);
+    free(handle);
+    return ESP_OK;
 }
