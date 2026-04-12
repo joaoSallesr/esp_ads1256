@@ -24,9 +24,9 @@
  *  ADS1256 Registers
  */
 #define ADS1256_REG_STATUS 0x00
-#define ADS1256_REG_MUX    0x01
-#define ADS1256_REG_ADCON  0x02
-#define ADS1256_REG_DRATE  0x03
+#define ADS1256_REG_MUX    0x01 // p = 7-4 bits, n = 3-0 bits
+#define ADS1256_REG_ADCON  0x02 // gain = 2-0 bits
+#define ADS1256_REG_DRATE  0x03 // DRATE = 7-0 bits
 #define ADS1256_REG_IO     0x04
 #define ADS1256_REG_OFC0   0x05
 #define ADS1256_REG_OFC1   0x06
@@ -54,24 +54,19 @@
 #define ADS1256_CMD_RESET    0xFE
 
 /*
- *  ADS1256 Mux Channels
+ * ADS1256 Mux Channels
  */
-#define ADS1256_MUX_AIN0   0x0
-#define ADS1256_MUX_AIN1   0x1
-#define ADS1256_MUX_AIN2   0x2
-#define ADS1256_MUX_AIN3   0x3
-#define ADS1256_MUX_AIN4   0x4
-#define ADS1256_MUX_AIN5   0x5
-#define ADS1256_MUX_AIN6   0x6
-#define ADS1256_MUX_AIN7   0x7
-#define ADS1256_MUX_AINCOM 0x8
-
-/*
- * ADS1256 Timing Delays
- */
-#define ADS1256_T6_DELAY_US    7 // after RDATA
-#define ADS1256_T10_DELAY_US   2 // CS hold
-#define ADS1256_RESET_DELAY_US 1 // reset pulse
+typedef enum {
+    ADS1256_MUX_AIN0   = 0x0,
+    ADS1256_MUX_AIN1   = 0x1,
+    ADS1256_MUX_AIN2   = 0x2,
+    ADS1256_MUX_AIN3   = 0x3,
+    ADS1256_MUX_AIN4   = 0x4,
+    ADS1256_MUX_AIN5   = 0x5,
+    ADS1256_MUX_AIN6   = 0x6,
+    ADS1256_MUX_AIN7   = 0x7,
+    ADS1256_MUX_AINCOM = 0x8,
+} ads1256_channel_t;
 
 /*
  *  ADS1256 Gain Options
@@ -90,22 +85,22 @@ typedef enum {
  *  ADS1256 Data Rate Options
  */
 typedef enum {
-    ADS1256_DRATE_30000SPS = 0xF0,
-    ADS1256_DRATE_15000SPS = 0xE0,
-    ADS1256_DRATE_7500SPS  = 0xD0,
-    ADS1256_DRATE_3750SPS  = 0xC0,
-    ADS1256_DRATE_2000SPS  = 0xB0,
-    ADS1256_DRATE_1000SPS  = 0xA1,
-    ADS1256_DRATE_500SPS   = 0x92,
-    ADS1256_DRATE_100SPS   = 0x82,
-    ADS1256_DRATE_60SPS    = 0x72,
-    ADS1256_DRATE_50SPS    = 0x63,
-    ADS1256_DRATE_30SPS    = 0x53,
-    ADS1256_DRATE_25SPS    = 0x43,
-    ADS1256_DRATE_15SPS    = 0x33,
-    ADS1256_DRATE_10SPS    = 0x23,
-    ADS1256_DRATE_5SPS     = 0x13,
     ADS1256_DRATE_2_5SPS   = 0x03,
+    ADS1256_DRATE_5SPS     = 0x13,
+    ADS1256_DRATE_10SPS    = 0x23,
+    ADS1256_DRATE_15SPS    = 0x33,
+    ADS1256_DRATE_25SPS    = 0x43,
+    ADS1256_DRATE_30SPS    = 0x53,
+    ADS1256_DRATE_50SPS    = 0x63,
+    ADS1256_DRATE_60SPS    = 0x72,
+    ADS1256_DRATE_100SPS   = 0x82,
+    ADS1256_DRATE_500SPS   = 0x92,
+    ADS1256_DRATE_1000SPS  = 0xA1,
+    ADS1256_DRATE_2000SPS  = 0xB0,
+    ADS1256_DRATE_3750SPS  = 0xC0,
+    ADS1256_DRATE_7500SPS  = 0xD0,
+    ADS1256_DRATE_15000SPS = 0xE0,
+    ADS1256_DRATE_30000SPS = 0xF0,
 } ads1256_drate_t;
 
 /*
@@ -116,13 +111,15 @@ typedef enum {
  * @brief ADS1256 configuration structure.
  */
 typedef struct ads1256_config_s {
-    spi_host_device_t spi_host; /*!< SPI bus selected */
-    gpio_num_t        cs;       /*!< ads1256 CS pin */
-    gpio_num_t        drdy;     /*!< Data Ready (active low) */
-    ads1256_gain_t    gain;     /*!< ADS1256 Gain Options */
-    ads1256_drate_t   drate;    /*!< ADS1256 Data Rate Options */
-    int32_t           drdy_timeout_ms;
-    bool              bufen;
+    spi_host_device_t spi_host;        /*!< SPI bus selected */
+    gpio_num_t        cs;              /*!< ads1256 CS pin */
+    gpio_num_t        drdy;            /*!< Data Ready (active low) */
+    ads1256_gain_t    gain;            /*!< ADS1256 Gain Options */
+    ads1256_drate_t   drate;           /*!< ADS1256 Data Rate Options */
+    ads1256_channel_t pos_channel;     /*!< ADS1256 Positive Channel */
+    ads1256_channel_t neg_channel;     /*!< ADS1256 Negative Channel */
+    int32_t           drdy_timeout_ms; /*!< ADS1256 ms until Timeout */
+    bool              bufen;           /*!< ADS1256 Use Bufen */
 } ads1256_config_t;
 
 /**
@@ -148,6 +145,81 @@ typedef struct ads1256_context_t *ads1256_handle_t;
  */
 
 /**
+ * @brief
+ *
+ * @param[in] handle ADS1256 device handle.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ads1256_wait_drdy(ads1256_handle_t handle);
+
+/**
+ * @brief
+ *
+ * @param[in] handle ADS1256 device handle.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ads1256_send_cmd(ads1256_handle_t handle, uint8_t cmd);
+
+/**
+ * @brief
+ *
+ * @param[in] handle ADS1256 device handle.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ads1256_read_reg(ads1256_handle_t handle, uint8_t reg, uint8_t *out_val);
+
+/**
+ * @brief
+ *
+ * @param[in] handle ADS1256 device handle.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ads1256_write_reg(ads1256_handle_t handle, uint8_t reg, uint8_t val);
+
+/**
+ * @brief Select ADS1256 positive and negative channels (p = 7-4 bits, n = 3-0 bits)
+ *
+ * @param[in] handle ADS1256 device handle.
+ * @param[in] pos ADS1256 positive channel.
+ * @param[in] neg ADS1256 negative channel.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ads1256_set_channel(ads1256_handle_t handle, uint8_t pos, uint8_t neg);
+
+/**
+ * @brief
+ *
+ * @param[in] handle ADS1256 device handle.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ads1256_set_gain(ads1256_handle_t handle);
+
+/**
+ * @brief
+ *
+ * @param[in] handle ADS1256 device handle.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ads1256_set_drate(ads1256_handle_t handle);
+
+/**
+ * @brief
+ *
+ * @param[in] handle ADS1256 device handle.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ads1256_start_conversion(ads1256_handle_t handle);
+
+/**
+ * @brief
+ *
+ * @param[in] handle ADS1256 device handle.
+ * @param[out] out_raw ADS1256 raw reading.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ads1256_read_result(ads1256_handle_t handle, int32_t *out_raw);
+
+/**
  * @brief Initalize ADS1256 device and add it to SPI
  *
  * @param[in] config ADS1256 device config.
@@ -156,24 +228,12 @@ typedef struct ads1256_context_t *ads1256_handle_t;
  */
 esp_err_t ads1256_init(const ads1256_config_t *config, ads1256_handle_t *handle);
 
+/**
+ * @brief Remove ADS1256 device from SPI and free handle
+ *
+ * @param[in] handle ADS1256 device handle.
+ * @return esp_err_t ESP_OK on success.
+ */
 esp_err_t ads1256_delete(ads1256_handle_t handle);
-
-esp_err_t ads1256_wait_drdy(ads1256_handle_t handle);
-
-esp_err_t ads1256_start_conversion(ads1256_handle_t handle);
-
-esp_err_t ads1256_read_result(ads1256_handle_t handle, int32_t *out_raw);
-
-esp_err_t ads1256_send_cmd(ads1256_handle_t handle, uint8_t cmd);
-
-esp_err_t ads1256_read_reg(ads1256_handle_t handle, uint8_t reg, uint8_t *out_val);
-
-esp_err_t ads1256_write_reg(ads1256_handle_t handle, uint8_t reg, uint8_t val);
-
-esp_err_t ads1256_set_channel(ads1256_handle_t handle, uint8_t pos, uint8_t neg);
-
-esp_err_t ads1256_set_gain(ads1256_handle_t handle);
-
-esp_err_t ads1256_set_drate(ads1256_handle_t handle);
 
 #endif // ESP_ADS1256_H
