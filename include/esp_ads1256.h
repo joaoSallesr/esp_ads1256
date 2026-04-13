@@ -24,9 +24,9 @@
  *  ADS1256 Registers
  */
 #define ADS1256_REG_STATUS 0x00
-#define ADS1256_REG_MUX    0x01 // p = 7-4 bits, n = 3-0 bits
-#define ADS1256_REG_ADCON  0x02 // gain = 2-0 bits
-#define ADS1256_REG_DRATE  0x03 // DRATE = 7-0 bits
+#define ADS1256_REG_MUX    0x01 // p = 7:4 bits, n = 3:0 bits
+#define ADS1256_REG_ADCON  0x02 // gain = 2:0 bits
+#define ADS1256_REG_DRATE  0x03 // DRATE = 7:0 bits
 #define ADS1256_REG_IO     0x04
 #define ADS1256_REG_OFC0   0x05
 #define ADS1256_REG_OFC1   0x06
