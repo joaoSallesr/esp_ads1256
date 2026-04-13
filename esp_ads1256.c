@@ -242,17 +242,17 @@ esp_err_t ads1256_init(const ads1256_config_t *ads1256_config, ads1256_handle_t 
 
     /* SPI device configuration */
     const spi_device_interface_config_t ads_dev_config = {
-        .command_bits     = 0,
-        .address_bits     = 0,
-        .dummy_bits       = 0,
-        .mode             = 1,   // CPOL=0, CPHA=1
+        .command_bits     = 0,   // raw data
+        .address_bits     = 0,   // raw data
+        .dummy_bits       = 0,   // no extra delay
+        .mode             = 1,   // CPOL=0 (idle low), CPHA=1 (sample on falling edge)
         .duty_cycle_pos   = 128, // 50% duty cycle
         .cs_ena_pretrans  = 0,
         .cs_ena_posttrans = 0,
         .clock_speed_hz   = SPI_CLOCK_HZ,
         .input_delay_ns   = 0,
-        .spics_io_num     = -1, // CS managed manually
-        .queue_size       = 1,
+        .spics_io_num     = -1, // CS managed manually with delays
+        .queue_size       = 1,  // queue not used
     };
     // VERIFICAR CONFIGURAÇÃO DO DISPOSITIVO --------------------------------------------------------
 
