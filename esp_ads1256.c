@@ -176,7 +176,8 @@ esp_err_t ads1256_read_result(ads1256_handle_t handle, int32_t *out_raw) {
     uint8_t   rx[3] = {0};
 
     /* wait for conversion to complete — outside bus acquire, no SPI needed */
-    ESP_RETURN_ON_ERROR(ads1256_wait_drdy(handle), TAG, "DRDY timeout before read");
+    /* DRDY CHECKING -> USER OWN IMPLEMENTATION */
+    // ESP_RETURN_ON_ERROR(ads1256_wait_drdy(handle), TAG, "DRDY timeout before read");
 
     ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY), TAG,
                         "Failed to acquire bus for read");
@@ -239,7 +240,7 @@ esp_err_t ads1256_init(const ads1256_config_t *ads1256_config, ads1256_handle_t 
         .mode         = GPIO_MODE_INPUT,
         .pull_up_en   = GPIO_PULLUP_ENABLE,
         .pull_down_en = GPIO_PULLDOWN_DISABLE,
-        .intr_type    = GPIO_INTR_DISABLE,
+        .intr_type    = GPIO_INTR_NEGEDGE,
     };
     ESP_GOTO_ON_ERROR(gpio_config(&drdy_conf), err_handle, TAG, "Failed to configure DRDY pin");
 
