@@ -73,11 +73,15 @@ esp_err_t ads1256_wait_drdy(ads1256_handle_t handle) {
 esp_err_t ads1256_send_cmd(ads1256_handle_t handle, uint8_t cmd) {
     esp_err_t ret = ESP_OK;
 
-    cs_low(handle);
+    spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY);
+    s_low(handle);
+
     ESP_GOTO_ON_ERROR(spi_write_bytes(handle, &cmd, 1), done, TAG, "Failed to send command 0x%02X", cmd);
 
 done:
     cs_high(handle);
+    spi_device_release_bus(handle->spi_handle);
+
     return ret;
 }
 
@@ -85,13 +89,18 @@ esp_err_t ads1256_read_reg(ads1256_handle_t handle, uint8_t reg, uint8_t *out_va
     esp_err_t ret   = ESP_OK;
     uint8_t   tx[2] = {ADS1256_CMD_RREG | (reg & 0x0F), // Byte 0: Read Register cmd : Register
                        0x00};                           // Byte 1: Read 1 byte
+
+    spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY);
     cs_low(handle);
+
     ESP_GOTO_ON_ERROR(spi_write_bytes(handle, tx, 2), done, TAG, "Failed to write RREG command for reg 0x%02X", reg);
     ets_delay_us(ADS1256_T6_US); // t6: 50 × tCLKIN before clocking out DOUT
     ESP_GOTO_ON_ERROR(spi_read_bytes(handle, out_val, 1), done, TAG, "Failed to read register 0x%02X", reg);
 
 done:
     cs_high(handle);
+    spi_device_release_bus(handle->spi_handle);
+
     return ret;
 }
 
@@ -103,11 +112,15 @@ esp_err_t ads1256_write_reg(ads1256_handle_t handle, uint8_t reg, uint8_t val) {
         val,                             // Byte 2: Write value
     };
 
+    spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY);
     cs_low(handle);
+
     ESP_GOTO_ON_ERROR(spi_write_bytes(handle, tx, 3), done, TAG, "Failed to write register 0x%02X", reg);
 
 done:
     cs_high(handle);
+    spi_device_release_bus(handle->spi_handle);
+
     return ret;
 }
 

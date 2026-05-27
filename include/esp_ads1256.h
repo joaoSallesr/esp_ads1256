@@ -226,7 +226,7 @@ esp_err_t ads1256_read_result(ads1256_handle_t handle, int32_t *out_raw);
  * @param[out] handle ADS1256 device handle.
  * @return esp_err_t ESP_OK on success.
  */
-esp_err_t ads1256_init(const ads1256_config_t *config, ads1256_handle_t *handle);
+esp_err_t ads1256_init(const ads1256_config_t *ads1256_config, ads1256_handle_t *ads1256_handle);
 
 /**
  * @brief Remove ADS1256 device from SPI and free handle
