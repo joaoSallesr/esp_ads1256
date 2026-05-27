@@ -74,7 +74,7 @@ esp_err_t ads1256_send_cmd(ads1256_handle_t handle, uint8_t cmd) {
     esp_err_t ret = ESP_OK;
 
     spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY);
-    s_low(handle);
+    cs_low(handle);
 
     ESP_GOTO_ON_ERROR(spi_write_bytes(handle, &cmd, 1), done, TAG, "Failed to send command 0x%02X", cmd);
 
