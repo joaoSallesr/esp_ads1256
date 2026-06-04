@@ -8,11 +8,6 @@
 
 static const char *TAG = "ads1256";
 
-/* ADS1256 timing constants — based on τCLKIN = 130.2ns @ 7.68MHz CLKIN */
-#define ADS1256_T6_US       7 // 50 × τCLKIN = 6.51µs — after last DIN bit before first DOUT SCLK (RDATA/RREG)
-#define ADS1256_T10_US      2 // 8 × τCLKIN = 1.04µs worst case
-#define ADS1256_T11_SYNC_US 4 // 24 × τCLKIN = 3.12µs — delay after SYNC before WAKEUP
-
 /* SPI clock: ADS1256 supports up to fCLKIN/4. At default 7.68 MHz CLKIN → 1.92 MHz. */
 #define SPI_CLOCK_HZ 1920000
 
@@ -133,9 +128,9 @@ esp_err_t ads1256_set_channel(ads1256_handle_t handle, uint8_t pos, uint8_t neg)
 
 esp_err_t ads1256_set_gain(ads1256_handle_t handle) {
     // ADCON:
-    // CLKOUT = off (bits 4:3 = 00),
-    // sensor detect = off (bits 6:5 = 00),
     // PGA = gain (bits 2:0)
+    // CLKOUT = off (bits 4:3 = 00)
+    // sensor detect = off (bits 6:5 = 00)
     ESP_RETURN_ON_ERROR(ads1256_write_reg(handle, ADS1256_REG_ADCON, handle->dev_config.gain & 0x07), TAG,
                         "Failed to set gain");
     return ESP_OK;

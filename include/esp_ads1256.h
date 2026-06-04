@@ -20,6 +20,11 @@
 #include <freertos/task.h>
 #include <freertos/timers.h>
 
+/* ADS1256 timing constants — based on τCLKIN = 130.2ns @ 7.68MHz CLKIN */
+#define ADS1256_T6_US       7 // 50 × τCLKIN = 6.51µs — after last DIN bit before first DOUT SCLK (RDATA/RREG)
+#define ADS1256_T10_US      2 // 8 × τCLKIN = 1.04µs worst case
+#define ADS1256_T11_SYNC_US 4 // 24 × τCLKIN = 3.12µs — delay after SYNC before WAKEUP
+
 /*
  *  ADS1256 Registers
  */
