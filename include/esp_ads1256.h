@@ -225,6 +225,15 @@ esp_err_t ads1256_start_conversion(ads1256_handle_t handle);
 esp_err_t ads1256_read_result(ads1256_handle_t handle, int32_t *out_raw);
 
 /**
+ * @brief
+ *
+ * @param[in] handle ADS1256 device handle.
+ * @param[out] out_raw ADS1256 raw reading.
+ * @return esp_err_t ESP_OK on success.
+ */
+esp_err_t ads1256_read_continuous(ads1256_handle_t handle, int32_t *out_raw);
+
+/**
  * @brief Initalize ADS1256 device and add it to SPI
  *
  * @param[in] config ADS1256 device config.

@@ -217,6 +217,44 @@ done:
     return ESP_OK;
 }
 
+esp_err_t ads1256_read_continuous(ads1256_handle_t handle, int32_t *out_raw) {
+    ESP_ARG_CHECK(handle);
+    ESP_ARG_CHECK(out_raw);
+
+    esp_err_t ret   = ESP_OK;
+    uint8_t   rx[3] = {0};
+
+    /* wait for conversion to complete — outside bus acquire, no SPI needed */
+    /* DRDY CHECKING -> USER OWN IMPLEMENTATION */
+    // ESP_RETURN_ON_ERROR(ads1256_wait_drdy(handle), TAG, "DRDY timeout before read");
+
+    ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY), TAG,
+                        "Failed to acquire bus for read");
+
+    cs_low(handle);
+
+    /* t6: 50 × tCLKIN = 6.51µs — must wait before clocking out data */
+    ets_delay_us(ADS1256_T6_US);
+
+    /* read 24-bit result */
+    ESP_GOTO_ON_ERROR(spi_read_bytes(handle, rx, 3), done, TAG, "Failed to read conversion result");
+
+done:
+    cs_high(handle);
+    spi_device_release_bus(handle->spi_handle);
+
+    if (ret != ESP_OK)
+        return ret;
+
+    /* combine bytes and sign-extend from 24-bit to 32-bit */
+    int32_t raw = ((int32_t)rx[0] << 16) | ((int32_t)rx[1] << 8) | rx[2];
+    if (raw & 0x800000)
+        raw |= 0xFF000000;
+    *out_raw = raw;
+
+    return ESP_OK;
+}
+
 esp_err_t ads1256_init(const ads1256_config_t *ads1256_config, ads1256_handle_t *ads1256_handle) {
     ESP_ARG_CHECK(ads1256_config);
     esp_err_t ret = ESP_FAIL;
@@ -298,6 +336,9 @@ esp_err_t ads1256_init(const ads1256_config_t *ads1256_config, ads1256_handle_t 
 
     /* run SELF-CALIBRATION */
     ESP_GOTO_ON_ERROR(ads1256_send_cmd(out_handle, ADS1256_CMD_SELFCAL), err_handle, TAG, "Failed self calibration");
+
+    /* set RDATAC */
+    ESP_GOTO_ON_ERROR(ads1256_send_cmd(out_handle, ADS1256_CMD_RDATAC), err_handle, TAG, "Failed to set RDATAC");
 
     /* wait for ADS1256 to be ready */
     ESP_GOTO_ON_ERROR(ads1256_wait_drdy(out_handle), err_handle, TAG, "Failed to get DRDY");
