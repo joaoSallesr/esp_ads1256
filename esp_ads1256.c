@@ -68,6 +68,7 @@ esp_err_t ads1256_wait_drdy(ads1256_handle_t handle) {
 esp_err_t ads1256_send_cmd(ads1256_handle_t handle, uint8_t cmd) {
     esp_err_t ret = ESP_OK;
 
+    xSemaphoreTake(handle->dev_config.spi_mutex, portMAX_DELAY);
     spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY);
     cs_low(handle);
 
@@ -76,6 +77,7 @@ esp_err_t ads1256_send_cmd(ads1256_handle_t handle, uint8_t cmd) {
 done:
     cs_high(handle);
     spi_device_release_bus(handle->spi_handle);
+    xSemaphoreGive(handle->dev_config.spi_mutex);
 
     return ret;
 }
@@ -85,6 +87,7 @@ esp_err_t ads1256_read_reg(ads1256_handle_t handle, uint8_t reg, uint8_t *out_va
     uint8_t   tx[2] = {ADS1256_CMD_RREG | (reg & 0x0F), // Byte 0: Read Register cmd : Register
                        0x00};                           // Byte 1: Read 1 byte
 
+    xSemaphoreTake(handle->dev_config.spi_mutex, portMAX_DELAY);
     spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY);
     cs_low(handle);
 
@@ -95,6 +98,7 @@ esp_err_t ads1256_read_reg(ads1256_handle_t handle, uint8_t reg, uint8_t *out_va
 done:
     cs_high(handle);
     spi_device_release_bus(handle->spi_handle);
+    xSemaphoreGive(handle->dev_config.spi_mutex);
 
     return ret;
 }
@@ -107,6 +111,7 @@ esp_err_t ads1256_write_reg(ads1256_handle_t handle, uint8_t reg, uint8_t val) {
         val,                             // Byte 2: Write value
     };
 
+    xSemaphoreTake(handle->dev_config.spi_mutex, portMAX_DELAY);
     spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY);
     cs_low(handle);
 
@@ -115,6 +120,7 @@ esp_err_t ads1256_write_reg(ads1256_handle_t handle, uint8_t reg, uint8_t val) {
 done:
     cs_high(handle);
     spi_device_release_bus(handle->spi_handle);
+    xSemaphoreGive(handle->dev_config.spi_mutex);
 
     return ret;
 }
@@ -147,6 +153,7 @@ esp_err_t ads1256_start_conversion(ads1256_handle_t handle) {
 
     esp_err_t ret = ESP_OK;
 
+    xSemaphoreTake(handle->dev_config.spi_mutex, portMAX_DELAY);
     ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY), TAG,
                         "Failed to acquire bus for conversion");
 
@@ -173,6 +180,8 @@ esp_err_t ads1256_start_conversion(ads1256_handle_t handle) {
 
 done:
     spi_device_release_bus(handle->spi_handle);
+    xSemaphoreGive(handle->dev_config.spi_mutex);
+
     return ret;
 }
 
@@ -187,6 +196,7 @@ esp_err_t ads1256_read_result(ads1256_handle_t handle, int32_t *out_raw) {
     /* DRDY CHECKING -> USER OWN IMPLEMENTATION */
     // ESP_RETURN_ON_ERROR(ads1256_wait_drdy(handle), TAG, "DRDY timeout before read");
 
+    xSemaphoreTake(handle->dev_config.spi_mutex, portMAX_DELAY);
     ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY), TAG,
                         "Failed to acquire bus for read");
 
@@ -204,6 +214,7 @@ esp_err_t ads1256_read_result(ads1256_handle_t handle, int32_t *out_raw) {
 done:
     cs_high(handle);
     spi_device_release_bus(handle->spi_handle);
+    xSemaphoreGive(handle->dev_config.spi_mutex);
 
     if (ret != ESP_OK)
         return ret;
@@ -228,6 +239,7 @@ esp_err_t ads1256_read_continuous(ads1256_handle_t handle, int32_t *out_raw) {
     /* DRDY CHECKING -> USER OWN IMPLEMENTATION */
     // ESP_RETURN_ON_ERROR(ads1256_wait_drdy(handle), TAG, "DRDY timeout before read");
 
+    xSemaphoreTake(handle->dev_config.spi_mutex, portMAX_DELAY);
     ESP_RETURN_ON_ERROR(spi_device_acquire_bus(handle->spi_handle, portMAX_DELAY), TAG,
                         "Failed to acquire bus for read");
 
@@ -242,6 +254,7 @@ esp_err_t ads1256_read_continuous(ads1256_handle_t handle, int32_t *out_raw) {
 done:
     cs_high(handle);
     spi_device_release_bus(handle->spi_handle);
+    xSemaphoreGive(handle->dev_config.spi_mutex);
 
     if (ret != ESP_OK)
         return ret;

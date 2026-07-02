@@ -125,6 +125,7 @@ typedef struct ads1256_config_s {
     ads1256_channel_t neg_channel;     /*!< ADS1256 Negative Channel */
     int32_t           drdy_timeout_ms; /*!< ADS1256 ms until Timeout */
     bool              bufen;           /*!< ADS1256 Use Bufen */
+    SemaphoreHandle_t spi_mutex;       /*!< ADS1256 SPI bus mutex */
 } ads1256_config_t;
 
 /**
