@@ -279,8 +279,6 @@ esp_err_t ads1256_init(const ads1256_config_t *ads1256_config, ads1256_handle_t 
     /* copy device config to out_handle */
     out_handle->dev_config = *ads1256_config;
 
-    /* set SPI device configuration */
-
     // VERIFICAR CONFIGURAÇÃO DO DISPOSITIVO --------------------------------------------------------
     /* configure CS pin as output, idle high */
     gpio_config_t cs_conf = {
